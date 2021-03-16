@@ -1,0 +1,39 @@
+rpm -Uvh https://repo.zabbix.com/zabbix/5.0/rhel/8/x86_64/zabbix-release-5.0-1.el8.noarch.rpm
+dnf clean all
+dnf -y install zabbix-server-mysql zabbix-web-mysql zabbix-apache-conf zabbix-agent
+
+dnf -y install mariadb-server && systemctl start mariadb && systemctl enable mariadb
+
+[shell]
+mysql -e "UPDATE mysql.user SET Password=PASSWORD(‘{input_password_here}’) WHERE User=’root’;"
+mysql -e "DELETE FROM mysql.user WHERE User=’root’ AND Host NOT IN (‘localhost’, ‘127.0.0.1’, ‘::1’);"
+mysql -e "DELETE FROM mysql.user WHERE User=”;"
+mysql -e "DROP DATABASE test;"
+mysql -e "FLUSH PRIVILEGES;"
+[/shell]
+
+mysql -uroot -p'rootDBpass' -e "create database zabbix character set utf8 collate utf8_bin;"
+mysql -uroot -p'rootDBpass' -e "grant all privileges on zabbix.* to zabbix@localhost identified by 'zabbixDBpass';"
+
+mysql -uroot -p'rootDBpass' zabbix -e "set global innodb_strict_mode='OFF';"
+zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p'zabbixDBpass' zabbix
+mysql -uroot -p'rootDBpass' zabbix -e "set global innodb_strict_mode='ON';"
+
+sed -i 's/# DBPassword=/DBPassword=P@ssw0rd/' /etc/zabbix/zabbix_server.conf
+cp /usr/share/zabbix/conf/zabbix.conf.php.example /etc/zabbix/web/zabbix.conf.php
+sed -i "s/\['PASSWORD'\]\s*=\s''/\['PASSWORD'\] = 'P@ssw0rd'/g" /etc/zabbix/zabbix.conf.php
+sed -i 's/;\s*php_value\[date.timezone\] = Europe\/Riga/php_value\[date.timezone\] = Europe\/Moscow/' /etc/php-fpm.d/zabbix.conf
+
+dnf -y install policycoreutils checkpolicy setroubleshoot-server
+--> copy file zabbix_server_add.te
+checkmodule -M -m -o zabbix_server_add.mod zabbix_server_add.te
+semodule_package -m zabbix_server_add.mod -o zabbix_server_add.pp
+semodule -i zabbix_server_add.pp
+setsebool -P httpd_can_network_connect 1
+setsebool -P httpd_can_connect_zabbix 1
+setsebool zabbix_can_network on
+
+firewall-cmd --add-service={http,https,zabbix-server,zabbix-agent} --permanent
+firewall-cmd --reload
+
+systemctl enable --now zabbix-server zabbix-agent

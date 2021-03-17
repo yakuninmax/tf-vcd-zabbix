@@ -21,7 +21,7 @@ mysql -uroot -p'rootDBpass' zabbix -e "set global innodb_strict_mode='ON';"
 
 sed -i 's/# DBPassword=/DBPassword=P@ssw0rd/' /etc/zabbix/zabbix_server.conf
 cp /usr/share/zabbix/conf/zabbix.conf.php.example /etc/zabbix/web/zabbix.conf.php
-sed -i "s/\['PASSWORD'\]\s*=\s''/\['PASSWORD'\] = 'P@ssw0rd'/g" /etc/zabbix/zabbix.conf.php
+sed -i "s/\['PASSWORD'\]\s*=\s''/\['PASSWORD'\] = 'P@ssw0rd'/g" /etc/zabbix/web/zabbix.conf.php
 sed -i 's/;\s*php_value\[date.timezone\] = Europe\/Riga/php_value\[date.timezone\] = Europe\/Moscow/' /etc/php-fpm.d/zabbix.conf
 
 dnf -y install policycoreutils checkpolicy setroubleshoot-server
@@ -36,4 +36,4 @@ setsebool zabbix_can_network on
 firewall-cmd --add-service={http,https,zabbix-server,zabbix-agent} --permanent
 firewall-cmd --reload
 
-systemctl enable --now zabbix-server zabbix-agent
+systemctl enable --now zabbix-server zabbix-agent httpd

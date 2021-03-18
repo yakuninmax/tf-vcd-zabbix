@@ -126,32 +126,3 @@ resource "vcd_nsxv_firewall_rule" "zabbix-firewall-rule" {
     port     = var.external_http_port
   }
 }
-
-provider "zabbix" {
-  depends_on = [ module.zabbix-vm ]
-  
-  user       = "Admin"
-  password   = "zabbix"
-  server_url = "http://${module.zabbix-vm.external-ip}:${var.external_http_port}/zabbix/api_jsonrpc.php"
-}
-
-# Create Zabbix Windows host group
-resource "zabbix_host_group" "windows-group" {
-  name = "Windows servers"
-}
-
-# Create Zabbix hosts
-resource "zabbix_host" "linux-host" {
-  count = length(var.zbx_linux_hosts)
-
-  host = var.zbx_linux_hosts[count.index].ip
-  name = var.zbx_linux_hosts[count.index].name
-  
-  interfaces {
-    ip = var.zbx_linux_hosts[count.index].ip
-    main = true
-  }
-  
-  groups = ["Linux servers"]
-  templates = ["Template ICMP Ping"] 
-}

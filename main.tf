@@ -128,6 +128,8 @@ resource "vcd_nsxv_firewall_rule" "zabbix-firewall-rule" {
 }
 
 provider "zabbix" {
+  depends_on = [ module.zabbix-vm ]
+  
   user       = "Admin"
   password   = "zabbix"
   server_url = "http://${module.zabbix-vm.external-ip}:${var.external_http_port}/zabbix/api_jsonrpc.php"

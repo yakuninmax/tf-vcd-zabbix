@@ -105,19 +105,19 @@ variable "zbx_db_password" {
   #sensitive   = true
 }
 
-variable "zbx_name" {
+variable "name" {
   type        = string
   description = "Zabbix VM name"
   default     = "ZBX01"
 }
 
-variable "zbx_external_ip" {
+variable "external_ip" {
   type        = string
   description = "VM external IP address"
   default     = ""
 }
 
-variable "zbx_external_port" {
+variable "external_http_port" {
   type        = string
   description = "Zabbix web interface external port"
   default     = ""

@@ -2,9 +2,9 @@
 module zabbix-vm {
   source = "github.com/yakuninmax/tf-vcd-centos-vm"
 
-  vapp             = var.vapp_name
+  vapp             = var.vapp
   template         = var.template
-  name             = var.zbx_name
+  name             = var.name
   cpus             = var.cpus
   ram              = var.ram
   system_disk_size = var.system_disk_size
@@ -18,7 +18,7 @@ module zabbix-vm {
   ]
 
   allow_external_ssh = true
-  external_ip        = var.zbx_external_ip != "" ? var.zbx_external_ip : data.vcd_edgegateway.edge.external_network_ips[0]
+  external_ip        = var.external_ip != "" ? var.external_ip : data.vcd_edgegateway.edge.external_network_ips[0]
   external_ssh_port  = var.external_ssh_port != "" ? var.external_ssh_port : ""
   root_password      = var.root_password != "" ? var.root_password : ""  
 }
@@ -91,14 +91,14 @@ resource "null_resource" "install-zabbix" {
 
 # Zabbix DNAT rule
 resource "vcd_nsxv_dnat" "zabbix-dnat-rule" {
-  count = var.zbx_external_port != "" ? 1 : 0
+  count = var.external_http_port != "" ? 1 : 0
   
   edge_gateway = data.vcd_edgegateway.edge.name
   network_type = "ext"
   network_name = tolist(data.vcd_edgegateway.edge.external_network)[0].name  
 
   original_address   = data.vcd_edgegateway.edge.external_network_ips[0]
-  original_port      = var.zbx_external_port
+  original_port      = var.external_http_port
   translated_address = module.zabbix-vm.internal-ip
   translated_port    = "80"
   protocol           = "tcp"
@@ -108,7 +108,7 @@ resource "vcd_nsxv_dnat" "zabbix-dnat-rule" {
 
 # Zabbix firewall rule
 resource "vcd_nsxv_firewall_rule" "zabbix-firewall-rule" {  
-  count = var.zbx_external_port != "" ? 1 : 0
+  count = var.external_http_port != "" ? 1 : 0
 
   edge_gateway = data.vcd_edgegateway.edge.name
   name         = "HTTP to ${module.zabbix-vm.name}"
@@ -123,11 +123,27 @@ resource "vcd_nsxv_firewall_rule" "zabbix-firewall-rule" {
 
   service {
     protocol = "tcp"
-    port     = var.zbx_external_port
+    port     = var.external_http_port
   }
 }
 
 # Create Zabbix Windows host group
 resource "zabbix_host_group" "windows-group" {
   name = "Windows servers"
+}
+
+# Create Zabbix hosts
+resource "zabbix_host" "linux-host" {
+  count = length(var.zbx_linux_hosts)
+
+  host = var.zbx_linux_hosts[count.index].ip
+  name = var.zbx_linux_hosts[count.index].name
+  
+  interfaces {
+    ip = var.zbx_linux_hosts[count.index].ip
+    main = true
+  }
+  
+  groups = ["Linux servers"]
+  templates = ["Template ICMP Ping"] 
 }

@@ -68,36 +68,36 @@ variable "template" {
   description = "CentOS VM template"
 }
 
-variable "vapp_name" {
+variable "vapp" {
   type        = string
   description = "vAPP name"
 }
 
-variable "vcd_url" {
-  type        = string
-  description = "vCD URL"
-}
+#variable "vcd_url" {
+#  type        = string
+#  description = "vCD URL"
+#}
 
-variable "vcd_user" {
-  type        = string
-  description = "vCD user name"
-}
+#variable "vcd_user" {
+#  type        = string
+#  description = "vCD user name"
+#}
 
-variable "vcd_password" {
-  type        = string
-  description = "vCD user password"
-  sensitive   = true
-}
+#variable "vcd_password" {
+#  type        = string
+#  description = "vCD user password"
+#  sensitive   = true
+#}
 
-variable "vcd_org" {
-  type = string
-  description = "vCD organization name"
-}
+#variable "vcd_org" {
+#  type = string
+#  description = "vCD organization name"
+#}
 
-variable "org_vdc" {
-  type = string
-  description = "Organization VDC"
-}
+#variable "org_vdc" {
+#  type = string
+#  description = "Organization VDC"
+#}
 
 variable "zbx_db_password" {
   type        = string

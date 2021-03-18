@@ -127,6 +127,12 @@ resource "vcd_nsxv_firewall_rule" "zabbix-firewall-rule" {
   }
 }
 
+provider "zabbix" {
+  user       = "Admin"
+  password   = "zabbix"
+  server_url = "http://${module.zabbix-vm.external-ip}:${var.external_http_port}/zabbix/api_jsonrpc.php"
+}
+
 # Create Zabbix Windows host group
 resource "zabbix_host_group" "windows-group" {
   name = "Windows servers"
